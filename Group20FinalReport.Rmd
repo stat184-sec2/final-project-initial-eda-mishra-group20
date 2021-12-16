@@ -1,0 +1,182 @@
+---
+title: "Final Project Report"
+author: "Oshika Mishra and Evan Spinney"
+date: "Due: 12-16-21"
+output: html_notebook
+---
+
+### Data Access
+For our project, we decided to research movies and TV shows in the media to discover how different streaming platforms recommend new films for viewers to watch. It is unlikely that we would genuinely figure out how it's accomplished by each platform because each platform has their own unique algorithm they use that are specific to each user. The algorithm itself takes into account the newest and most popular shows and movies when the viewers use the site as well as each and every user's watch history. The sites generally have a few sections such as "Because you watched. . ." and "You might like. . ." where it shows other films or shows that have not been watched yet, but the user may like based on what they have already watched. As to how the algorithm works, we pretty much know what it does, and a little bit about how it works, we just don't know how it works in terms of each user, and we don't know why certain shows and movies are suggested to users over another with similar characteristics. With this project, we have found two data sources that may be able to help us answer those questions. Both tables have a large assortment of movies over the years with plenty of variables to go along with them including genre, popularity, runtime, director, release date, and more. This variables have an influence on popularity and, naturally, revenue for each film or show and for the streaming platform. In terms of number of users, as of 2021, YouTube is the most used streaming platform which is primarily used for personal videos that people make and share with others for a number of purposes. The second highest is Netflix with roughly 195 million users followed by Amazon Prime and then Disney+ which only contain movies and TV shows. All of these have their own way of suggesting new content for the users of these sites, and we are going to look at what components of movies make certain ones more suggestable over another to the users. With our data, and the number of variables provided for the movies and shows in our tables, we should hopefully be able to successfully answer that question.
+
+```{r}
+# clean up workspace environment
+rm(list = ls())
+# all packages used for the assignment
+library(mosaic)
+library(tidyverse)
+library(dcData)
+library(hexView)
+library(dplyr)
+library(tidyr)
+```
+
+
+## First Source
+```{r}
+MetaData <- read.csv('metadata.csv')
+MetaData %>%
+  summary(MetaData)
+```
+This is our primary data set that we found for the project. As shown, there are a substantial number of variables from this table alone that could help us answer our research question. This was the table we obtained from Kaggle, and it contains critical variables like the genre, runtime, budget, revenue and more, and at the same time, it also contains fairly unique variables such as production company, production country, and the language the film is in. All of those are unique but resourceful information we can utilize to answer any and all questions branched from our main research question. 
+
+```{r}
+MetaData%>%
+  head(5)
+```
+
+
+## Second Source
+```{r}
+IMDbMovies <- read.csv('Imdbmovies.csv')
+IMDbMovies %>%
+  summary(IMDbMovies)
+```
+This second table was the one found that we do not know much about the creator. Our second table has a significantly larger amount of data available for us, so most of our findings will likely be found from this table which also contains unique variables that can very well be beneficial for us in our research. It contains variables such as writer, director, language, and more. Some of the variables are the same in the first table like title and genre, as well as the duration of the movie or film even though the first tables column for that is called "Runtime." 
+
+```{r}
+IMDbMovies %>%
+  head(5)
+```
+
+
+With one table containing over 45,000 units of observation, and the other almost double that, the tables should have matching cases, and plenty of unique cases as there are a handful of them that were produced and released in other countries with titles in another language. Even if they don't have that many matches, we will definitely still make some observations from the data we've gathered. 
+
+### Data Wrangling / Cleaning
+```{r}
+Joined_inner <-
+  IMDbMovies %>%
+  inner_join(MetaData)
+Joined_inner
+```
+From this inner_join function, which joins the tables and produces only the cases from the left with a match to the right, we see there are actually zero matches from the tables which is odd. It makes more sense then to see the tables with all the data gathered together with the full_join and mutate some of the columns to match the names of the variables being observed (e.g. runtime / duration, date published / release date, etc.).
+
+```{r}
+RefinedMeta <- rename(MetaData, "genre"="genres"
+                     , "imdb_title_id"="imdb_id"
+                     , "date_published"="release_date"
+                     , "duration"="runtime")
+RefinedMeta
+```
+
+
+```{r}
+Joined_full <-
+  IMDbMovies %>%
+  full_join(RefinedMeta)
+Joined_full
+```
+By joining the two tables this way, we have a total of 131,321 movies 
+between our two tables. We can answer a few questions of ours with the joined data using a few summary and reduction functions.
+
+```{r}
+filtered <-
+Joined_full%>%
+  select(duration,budget,genre,title,country)%>%
+  filter(duration > 90)%>%
+  arrange(desc(budget))
+filtered
+```
+From this filter, we can see that there are 83,410 cases where the film's runtime is over an hour and a half. This is beneficial for us because generally speaking, most films that tend to be less popular have a shorter duration than films that are very popular. 
+```{r}
+filtered%>%
+  summarise(averRuntime = mean(duration, na.rm = TRUE),
+            highRuntime = max(duration, na.rm = TRUE),
+            lowRuntime = min(duration, na.rm = TRUE))
+```
+This summary function shows that the average runtime for the filtered cases is 110.4658 minutes and the highest and lowest runtimes are, respectively, 1256 minutes and 91 minutes. Included in the tables are various television shows where the runtime is measured in full every length of each episode and added together. In the case with the highest runtime, it belongs to a television series with just 12 episodes called 'Centennial' which aired in 1978 and each episode was about an hour and a half long, with the exception of the first and last episode which were both just under two and a half hours.
+```{r}
+filtered%>%
+  filter(grepl("[^aeiou]{3,}",budget,ignore.case = TRUE))
+```
+Here, we filtered out cases from the budget column of the filtered table to see the number of cases that had a budget measured in another currency. Thankfully the author included the measurements with the budget to make filtering out the other cases easy, as well as being able to tell that the letters before the budget number distinguishes that the movie's budget was in that country's respective currency. These movies were not made in the United States and have their currency measured in their respective tender, so MXN1000000 means 1000000 in Mexico's currency. Looking at the budget for films is important to measure success and to see if that has an overall impact on the popularity. This is because films that have a higher budget can afford to spend more money on casting better actors, props, costumes, production, and so on, which boosts the overall quality of the film and in turn, popularity and success.
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  summarise(count = n())%>%
+  arrange(desc(count))
+```
+From this alone, we see that drama, comedy, and romance appear quite frequently as a genre or subgenre to each of the films from the filtered table. This does not mean that they are the most popular, just that from our two original tables, these were the most frequently occuring genre of movie made and included in our data.
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Drama", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+Here, using a regular expression, we found that drama is a genre or subgenre of 48,995 of the total 83,410 filtered cases from earlier.
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Comedy", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Romance", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+Doing the same thing with the other two popular genres that first appeared, we see that comedy appears less frequently than drama and romance less than both of those. Here are a few more examples looking at some of the other genres that appear less frequently as a category of the films:
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Thriller", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Crime", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Documentary", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Biography", genre, ignore.case = TRUE))%>%
+  summarise(count = n())%>%
+  summarise(sum(count))
+```
+Looking at the films in drama specifically, here are the components of those films:
+```{r}
+filtered%>%
+  group_by(genre)%>%
+  filter(grepl("Drama", genre, ignore.case = TRUE))%>%
+  arrange(title)
+```
+This table further supports the idea that movies with a longer runtime than 90 minutes and a higher budget are more successful especially due to the fact that this is the most popular genre of movie made, not just in the United States, but internationally too. Looking at the budget column of this table, there is a fair balance between American made films, and foreign made ones, both show a higher runtime, both show a higher budget to make the film, both contribute to the drama genre.
+
+```{r}
+popular <- c("runtime", "money to produce the film", "drama")
+comps <- c("90 minutes", "a large amount", "a little bit")
+for (genre in seq_along(popular)) {
+    print(paste0("Popular movies have ", comps[genre], " of ", popular[genre]))
+}
+```
+Here are the three components we have iterated that are most commonly found in our lists of films. Let's look at a few graphics now to see other components that make a film popular and more suggestive for users of subsciption services.
+```{r}
+ggplot(data = MetaData) + geom_bar(aes(x = runtime, fill = adult)) + xlim(0,200)
+```
+From the MetaData table alone we see that there are almost no cases where the film is classified as an adult film, and the data in turms of runtime presents itself in the shape of a bell-curve. 
+
+From the research conducted in this project, we have concluded a few things about what components are popular in movies and produce different outcomes in terms of popularity. Many of the films we had in our data tended to be non-adult rated films. Additionally, the runtime for movies were 90 minutes or longer, and had a sizeable budget for better quality and production. Drama was one of the most popular genres included in our table, meaning it is one of the most popular genres or subgenres that a movie category falls into. Looking more into actors, producers, and collection company proved to be a challenge as well as looking into other larger components from both tables that were present in one and not the other. Doing so would produce skewed data and innaccurate results. Another challenge was trying to use the measure of popularity from the MetaData table because though it supports certain claims accurately, since there were no matching titles from the two data tables, it would've fallen into the same trap as the others did with outputting skewed results. We haven't been able to confidently figure out how the algorithm for the streaming sites work in terms of what movies and shows are selected to be suggested to users, but we were successful in identifying key aspects that are popular in many films. Movies that end up being suggested to users should have at least one of the criterion listed whether its the length of the film or the genre. Other factors could and should be considered too, not just those. Popular actors can make a film just as likely to be suggested as another, we just couldn't figure out how to make that work with our research. 
