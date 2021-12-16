@@ -1,0 +1,55 @@
+---
+title: "Final Project Checklist"
+author: "Oshika Mishra and Evan Spinney"
+date: "Due: 12/15/2021"
+output: html_notebook
+---
+### Data Access
+
+*Description: (1) Analysis includes at least two different data sources. (2) Primary data source may NOT be loaded from an R package--though supporting data may. (3) Access to all data sources is contained within the analysis. (4) Imported data is inspected at beginning of analysis using one or more R functions: e.g., str, glimpse, head, tail, names, nrow, etc*
+
+(A) .Rmd Line numbers where at least two different data sources are imported: 26, 40
+
+
+(B) .Rmd Line numbers for inspecting data intake: 28,34,42,48
+
+
+### Data Wrangling / Cleaning / ect (5 out of 7 required)
+
+
+(A) .Rmd Line number(s) for general data wrangling: 64
+
+
+(B) .Rmd Line number(s) for a join operation: 56,73
+
+
+(C) .Rmd Line number(s) for a pivot_wider or pivot_longer operation (or equivalent): N/A
+
+
+(D) .Rmd Line number(s) for use of regular expressions: 99,112,120,127,135,142,149,156,164
+
+
+(E) .Rmd Line number(s) for use of reduction and/or transformation functions: 85,92,93,94
+
+
+(F) .Rmd Line number(s) for use of user-defined functions: N/A
+
+
+(G) .Rmd Line number(s) for use of loops and/or control flow: 172
+
+
+
+
+
+### Data Visualization (3 of 5 required)
+
+
+(A) .Rmd Line numbers for use of multiple different geoms: 178 
+
+(B) .Rmd Line number(s) for use of multiple aesthetics:  178
+
+(C) .Rmd Line number(s) for use of layered graphics: 178
+
+(D) .Rmd Line number(s) for use of leaflet or choropleth maps:  N/A
+
+(E) .Rmd Line number(s) for use of decision tree or dendogram results:  N/A 
